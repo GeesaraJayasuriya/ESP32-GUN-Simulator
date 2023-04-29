@@ -3,3 +3,6 @@ Gun simulators can be used for training purposes by law enforcement agencies, mi
 
 
 ![WhatsApp Image 2023-03-27 at 7 26 43 PM](https://user-images.githubusercontent.com/72536827/235292356-0076b2f8-698a-4b0b-aa2e-5d1f9d7875a6.jpeg)
+
+
+![WhatsApp Image 2023-03-27 at 7 27 50 PM](https://user-images.githubusercontent.com/72536827/235292506-3dabd6ed-b890-40f1-a31e-670426017021.jpeg)
