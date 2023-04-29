@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Line Chart</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <!-- Option 2: Separate Popper and Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"
+    integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"
+    integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <style>
+    canvas {
+      -moz-user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+    }
+
+    #chart_potentiometer,
+    #chart_force_sensor_1,
+    #chart_force_sensor_2,
+    #chart_force_sensor_3,
+    #chart_force_sensor_4 {
+      display: inline-block;
+      width: 25%;
+      margin-right: 1%;
+    }
+
+    #chart_force_sensor_4 {
+      margin-right: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar navbar-light bg-light ">
+    <h1 class="mx-auto mb-0 ">GUN SIMULATOR ANAYLSIS</h1>
+  </nav>
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center;">
+    <div class="container m-3">
+      <div class="card text-center">
+        <div class="card-header">
+          <h4>Potentiometer Meter Chart</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="chart_potentiometer"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="container m-3">
+      <div class="card text-center">
+        <div class="card-header">
+          <h4>Force Sensor Values</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="chart_force_sensors"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="container m-3">
+      <div class="card text-center">
+        <div class="card-header">
+          <h4> Gyroscopes Values</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="gyroscope_sensors"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="container m-3">
+      <div class="card text-center">
+        <div class="card-header">
+          <h4> Counter</h4>
+        </div>
+        <div class="card-body">
+          <p id="counter-input" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-size: 50pt;"></p>
+        </div>
+      </div>
+    </div>
+    <div class="container m-3">
+      <div class="card text-center">
+        <div class="card-header">
+          <h4> LOAD UNLOAD</h4>
+        </div>
+        <div class="card-body">
+          <p id="load_unload-input" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; font-size: 50pt;"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="text-center text-white" style="background-color: #f1f1f1;">
+    <!-- Copyright -->
+    <div class="text-center text-dark p-3" style="background-color: rgba(0, 0, 0, 0.2);">
+      2023 Copyright:
+      <a class="text-dark" href="https://www.youtube.com/channel/UCOxLRtv3phJUBndmJmgXlkw">(Tel-0774879211) click me</a>
+    </div>
+    <!-- Copyright -->
+  </footer>
+  <script>
+    var timestamp = new Date().getTime();
+    var chartData_Potentio_Meter = {
+      labels: [],
+      datasets: [{
+        label: "Potentiometer Value",
+        fill: false,
+        borderColor: "rgb(75, 192, 192)",
+        lineTension: 0.1,
+        data: []
+      }]
+    };
+    var chartData_Potentio_Meter_Options = {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Sensor Data'
+      },
+      scales: {
+        xAxes: [{
+          type: 'time',
+          time: {
+            unit: 'second',
+            displayFormats: {
+              second: 'h:mm:ss a',
+              minute: 'h:mm:ss a',
+              hour: 'h:mm:ss a'
+            },
+          },
+          scaleLabel: {
+            display: true,
+            labelString: 'Time'
+          }
+        }],
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Potentiometer Value'
+          }
+        }]
+      },
+      tooltips: {
+        mode: 'nearest',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      }
+    };
+
+    //initialize chrts
+
+    var ctx = document.getElementById('chart_potentiometer').getContext('2d');
+    var ctx_force_sensors = document.getElementById('chart_force_sensors').getContext('2d');
+    var ctx_gyroscope_sensors = document.getElementById('gyroscope_sensors').getContext('2d');
+
+
+    var lineChart_p = new Chart(ctx, {
+      type: 'line',
+      data: chartData_Potentio_Meter,
+      options: chartData_Potentio_Meter_Options
+    });
+
+    var chart_data_force = new Chart(ctx_force_sensors, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Force Sensor 1',
+            data: [],
+            borderColor: 'red',
+            fill: false
+          },
+          {
+            label: 'Force Sensor 2',
+            data: [],
+            borderColor: 'green',
+            fill: false
+          },
+          {
+            label: 'Force Sensor 3',
+            data: [],
+            borderColor: 'blue',
+            fill: false
+          },
+          {
+            label: 'Force Sensor 4',
+            data: [],
+            borderColor: 'orange',
+            fill: false
+          }
+        ]
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Force Sensors Chart'
+        },
+        scales: {
+          xAxes: [{
+            display: true
+          }],
+          yAxes: [{
+            display: true,
+            ticks: {
+              suggestedMin: 0,
+              suggestedMax: 1023
+            }
+          }]
+        }
+      }
+    });
+
+    var gyroscope_sensors = new Chart(ctx_gyroscope_sensors, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Gyro X',
+            data: [],
+            borderColor: 'green',
+            fill: false
+          },
+          {
+            label: 'Gyro Y',
+            data: [],
+            borderColor: 'brown',
+            fill: false
+          },
+          {
+            label: 'Gyro Z',
+            data: [],
+            borderColor: 'black',
+            fill: false
+          },
+        ]
+      },
+      options: {
+        title: {
+          display: true,
+          text: 'Gyro  Sensors Chart'
+        },
+        scales: {
+          xAxes: [{
+            display: true
+          }],
+          yAxes: [{
+            display: true,
+            ticks: {
+              suggestedMin: 0,
+              suggestedMax: 1023
+            }
+          }]
+        }
+      }
+    });
+
+
+    function updateChart() {
+      $.getJSON("/data", function (data) {
+
+        chart_data_force.data.labels.push(timestamp);
+        chart_data_force.data.datasets[0].data.push(data.forceSensor1);
+        chart_data_force.data.datasets[1].data.push(data.forceSensor2);
+        chart_data_force.data.datasets[2].data.push(data.forceSensor3);
+        chart_data_force.data.datasets[3].data.push(data.forceSensor4);
+        chart_data_force.update();
+
+        gyroscope_sensors.data.labels.push(timestamp);
+        gyroscope_sensors.data.datasets[0].data.push(data.gyro_x);
+        gyroscope_sensors.data.datasets[1].data.push(data.gyro_y);
+        gyroscope_sensors.data.datasets[2].data.push(data.gyro_z);
+        gyroscope_sensors.update();
+
+        if (data.hasOwnProperty('potentiometer')) {
+          var potentiometer = data.potentiometer;
+          chartData_Potentio_Meter.labels.push(timestamp);
+          chartData_Potentio_Meter.datasets[0].data.push(potentiometer);
+          lineChart_p.update();
+        } else {
+          console.log("Invalid data format");
+        }
+
+        var counterValue;
+        if (data.hasOwnProperty('counter')) {
+          counterValue = data.counter;
+        }
+         var load_unload_Value;
+        if (data.hasOwnProperty('load_unload')) {
+          load_unload_Value = data.load_unload;
+        }
+        // Add the counter value to the input box
+        $('#load_unload-input').text(load_unload_Value);
+        $('#counter-input').text(counterValue);
+      }).fail(function () {
+        console.log("Failed to fetch data");
+      });
+    }
+    // Update the chart every second
+    setInterval(updateChart, 1000);
+  </script>
+</body>
+
+</html>
