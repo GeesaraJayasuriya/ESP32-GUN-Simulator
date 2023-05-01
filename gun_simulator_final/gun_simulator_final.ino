@@ -20,7 +20,7 @@ float forceSensorValues[4];
 
 const int SOLENOID_PIN = 5; // Change this to the pin number where your solenoid is connected
 const int LASER_PIN = 18; // Change this to the pin number where your laser sensor is connected
-const int buttonPin = 4; // Change this to the pin number where the button is connected
+const int buttonPin = 19; // Change this to the pin number where the button is connected
 
 unsigned long previousMillis = 0;
 const long interval = 1000;  // Interval to read sensor value in milliseconds
@@ -127,12 +127,14 @@ void loop() {
           isSwitchClosed = true;
         } else if (reedSwitchState2 == LOW && isSwitchClosed) {
           isSwitchClosed = false;
+        } else {
+          counter = 0;
+          isSwitchClosed = false;
         }
         for (int i = 0; i < 4; i++) {
           forceSensorValues[i] = analogRead(32 + i) * (3.3 / 4095.0);
         }
         mpu.getEvent(&accel, &gyro, &temp);
-        
       } else if (digitalRead(buttonPin) == LOW && isButtonPressed) {
         isButtonPressed = false;
       }
