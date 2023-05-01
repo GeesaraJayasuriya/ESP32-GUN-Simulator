@@ -98,84 +98,64 @@ void setup() {
   // Start server
   server.begin();
 }
-
 void loop() {
-  unsigned long currentMillis = millis();
-      if (currentMillis - previousMillis >= interval) {
-        previousMillis = currentMillis;
-        
-        int reedSwitchState1 = digitalRead(reedSwitchPin1);
-        int reedSwitchState2 = digitalRead(reedSwitchPin2);
-        // Read force sensor values
-        for (int i = 0; i < 4; i++) {
-          forceSensorValues[i] = analogRead(32+i);
-        }
-          sensors_event_t accel, gyro,temp;
-          mpu.getEvent(&accel, &gyro,&temp);
-        
-        // Read potentiometer value
-        potentiometerValue = analogRead(A0) * (3.3 / 4095.0);
-        
-        // Convert analog values to voltage (assuming 3.3V reference voltage)
-        float forceSensor1Voltage = forceSensorValues[0];
-        float forceSensor2Voltage = forceSensorValues[1];
-        float forceSensor3Voltage = forceSensorValues[2];
-        float forceSensor4Voltage = forceSensorValues[3];
+  static unsigned long previousMillis = 0;
+  const unsigned long interval = 100;
+  
+  if (millis() - previousMillis >= interval) {
+    previousMillis = millis();
     
-        float accel_acceleration_x = accel.acceleration.x;
-        float accel_acceleration_y = accel.acceleration.y;
-        float accel_acceleration_z = accel.acceleration.z;
+    // Read sensor values
+    int reedSwitchState1 = digitalRead(reedSwitchPin1);
+    int reedSwitchState2 = digitalRead(reedSwitchPin2);
+    float forceSensorValues[4];
+    for (int i = 0; i < 4; i++) {
+      forceSensorValues[i] = analogRead(32+i) * (3.3 / 4095.0);
+    }
+    sensors_event_t accel, gyro, temp;
+    mpu.getEvent(&accel, &gyro, &temp);
+    float potentiometerValue = analogRead(A0) * (3.3 / 4095.0);
     
-    
-         // Write data to file
-        File file = SPIFFS.open("/data/data.json", FILE_WRITE);
-        if (!file) {
-          Serial.println("Failed to open file for writing");
-          return;
-        }
-    
-        StaticJsonDocument<200> doc;
-         if (reedSwitchState1 == LOW) {
-            // check if the switch has changed state
-            if (reedSwitchState2 == HIGH && !isSwitchClosed) {
-                  // switch has gone from LOW to HIGH, increment counter
-                      counter++;
-                      isSwitchClosed = true;
-            } else if (reedSwitchState2 == LOW && isSwitchClosed) {
-                  // switch has gone from HIGH to LOW, reset switch closed flag
-                      isSwitchClosed = false;
-             }
-            doc["load_unload"] = reedSwitchState1;
-            doc["forceSensor1"] = forceSensor1Voltage;
-            doc["forceSensor2"] = forceSensor2Voltage;
-            doc["forceSensor3"] = forceSensor3Voltage;
-            doc["forceSensor4"] = forceSensor4Voltage;
-            doc["potentiometer"] =potentiometerValue;
-            doc["gyro_x"] = accel_acceleration_x;
-            doc["gyro_y"] = accel_acceleration_y;
-            doc["gyro_z"] = accel_acceleration_z;
-            doc["counter"] = counter;
-            
-            if (potentiometerValue >= 2.0) {
-              processPotValue(potentiometerValue);
-            }
-            
-         }else{
-            doc["load_unload"] = HIGH;
-            doc["forceSensor1"] = 0.0;
-            doc["forceSensor2"] = 0.0;
-            doc["forceSensor3"] = 0.0;
-            doc["forceSensor4"] = 0.0;
-            doc["potentiometer"] =0.0;
-            doc["gyro_x"] = 0.0;
-            doc["gyro_y"] = 0.0;
-            doc["gyro_z"] = 0.0;
-            doc["counter"] = 0;
-          
-         }
-        serializeJson(doc, file);
-        file.close();
+    // Update switch counter
+    static bool isSwitchClosed = false;
+    static int counter = 0;
+    if (reedSwitchState1 == LOW) {
+      if (reedSwitchState2 == HIGH && !isSwitchClosed) {
+        counter++;
+        isSwitchClosed = true;
+      } else if (reedSwitchState2 == LOW && isSwitchClosed) {
+        isSwitchClosed = false;
       }
+    } else {
+      counter = 0;
+      isSwitchClosed = false;
+    }
+    
+    // Process potentiometer value
+    if (potentiometerValue >= 2.0) {
+      processPotValue(potentiometerValue);
+    }
+    
+    // Write data to file
+    File file = SPIFFS.open("/data/data.json", FILE_WRITE);
+    if (!file) {
+      Serial.println("Failed to open file for writing");
+      return;
+    }
+    StaticJsonDocument<200> doc;
+    doc["load_unload"] = reedSwitchState1;
+    doc["forceSensor1"] = forceSensorValues[0];
+    doc["forceSensor2"] = forceSensorValues[1];
+    doc["forceSensor3"] = forceSensorValues[2];
+    doc["forceSensor4"] = forceSensorValues[3];
+    doc["potentiometer"] = potentiometerValue;
+    doc["gyro_x"] = accel.acceleration.x;
+    doc["gyro_y"] = accel.acceleration.y;
+    doc["gyro_z"] = accel.acceleration.z;
+    doc["counter"] = counter;
+    serializeJson(doc, file);
+    file.close();
+  }
 }
 
 void processPotValue(int value){
