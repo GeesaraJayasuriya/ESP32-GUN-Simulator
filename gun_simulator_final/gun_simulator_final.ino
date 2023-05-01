@@ -17,10 +17,10 @@ const char* password = "eket9508";
 AsyncWebServer server(80);
 
 float forceSensorValues[4];
-float potentiometerValue = 0.0;
 
 const int SOLENOID_PIN = 5; // Change this to the pin number where your solenoid is connected
 const int LASER_PIN = 18; // Change this to the pin number where your laser sensor is connected
+const int buttonPin = 4; // Change this to the pin number where the button is connected
 
 unsigned long previousMillis = 0;
 const long interval = 1000;  // Interval to read sensor value in milliseconds
@@ -42,6 +42,7 @@ void setup() {
   pinMode(LASER_PIN, OUTPUT); 
   pinMode(reedSwitchPin1, INPUT_PULLUP);
   pinMode(reedSwitchPin2, INPUT_PULLUP);
+   pinMode(buttonPin, INPUT_PULLUP);
   
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -81,14 +82,14 @@ void setup() {
     float forceSensor2Value = root["forceSensor2"];
     float forceSensor3Value = root["forceSensor3"];
     float forceSensor4Value = root["forceSensor4"];
-    float potentiometerValue = root["potentiometer"];
+    bool buttonPressed = root["buttonPressed"];
     float gyro_x = root["gyro_x"];
     float gyro_y = root["gyro_y"];
     float gyro_z = root["gyro_z"];
     int   counter =root["counter"];
     bool  load_unload = root["load_unload"];
     // Send response
-    String response = "{\"forceSensor1\":" + String(forceSensor1Value) + ",\"forceSensor2\":" + String(forceSensor2Value) + ",\"forceSensor3\":" + String(forceSensor3Value) + ",\"forceSensor4\":" + String(forceSensor4Value)+ ",\"gyro_x\":" + String(gyro_x) + ",\"gyro_y\":" + String(gyro_y) + ",\"gyro_z\":" + String(gyro_z)+",\"counter\":" + String(counter)+",\"load_unload\":" + String(load_unload) + ",\"potentiometer\":" + String(potentiometerValue) + "}";
+    String response = "{\"forceSensor1\":" + String(forceSensor1Value) + ",\"forceSensor2\":" + String(forceSensor2Value) + ",\"forceSensor3\":" + String(forceSensor3Value) + ",\"forceSensor4\":" + String(forceSensor4Value)+ ",\"gyro_x\":" + String(gyro_x) + ",\"gyro_y\":" + String(gyro_y) + ",\"gyro_z\":" + String(gyro_z)+",\"counter\":" + String(counter)+",\"load_unload\":" + String(load_unload) + ",\"buttonPressed\":" + String(buttonPressed) + "}";
     request->send(200, "application/json", response);
     file.close();
   });
@@ -104,14 +105,14 @@ void loop() {
     // Read sensor values
     int reedSwitchState1 = digitalRead(reedSwitchPin1);
     int reedSwitchState2 = digitalRead(reedSwitchPin2);
+    int buttonState      =digitalRead(buttonPin);
     float forceSensorValues[4];
     for (int i = 0; i < 4; i++) {
       forceSensorValues[i] = analogRead(32+i) * (3.3 / 4095.0);
     }
     sensors_event_t accel, gyro, temp;
     mpu.getEvent(&accel, &gyro, &temp);
-    float potentiometerValue = analogRead(A0) * (3.3 / 4095.0);
-    
+  
     // Update switch counter
     static bool isSwitchClosed = false;
     static int counter = 0;
@@ -126,10 +127,20 @@ void loop() {
       counter = 0;
       isSwitchClosed = false;
     }
-    // Process potentiometer value
-    if (potentiometerValue >= 2.0) {
-      processPotValue(potentiometerValue);
+    // Check button press
+    static bool isButtonPressed = false;
+    if (digitalRead(buttonPin) == HIGH && !isButtonPressed) {
+       pinMode(SOLENOID_PIN,HIGH);
+        delay(1000);
+       pinMode(SOLENOID_PIN,LOW);
+       digitalWrite(LASER_PIN, HIGH);    // Output a HIGH value to the laser pin
+        delay(2000);                      // Wait for 1 second
+       digitalWrite(LASER_PIN, LOW);
+      isButtonPressed = true;
+    } else if (digitalRead(buttonPin) == LOW && isButtonPressed) {
+      isButtonPressed = false;
     }
+    
     // Write data to file
     File file = SPIFFS.open("/data/data.json", FILE_WRITE);
     if (!file) {
@@ -142,7 +153,7 @@ void loop() {
     doc["forceSensor2"] = forceSensorValues[1];
     doc["forceSensor3"] = forceSensorValues[2];
     doc["forceSensor4"] = forceSensorValues[3];
-    doc["potentiometer"] = potentiometerValue;
+    doc["buttonPressed"] = buttonState;
     doc["gyro_x"] = accel.acceleration.x;
     doc["gyro_y"] = accel.acceleration.y;
     doc["gyro_z"] = accel.acceleration.z;
@@ -150,15 +161,4 @@ void loop() {
     serializeJson(doc, file);
     file.close();
   }
-}
-
-void processPotValue(int value){
-  if(value){
-    pinMode(SOLENOID_PIN,HIGH);
-    delay(1000);
-    pinMode(SOLENOID_PIN,LOW);
-    digitalWrite(LASER_PIN, HIGH);    // Output a HIGH value to the laser pin
-    delay(1000);                      // Wait for 1 second
-    digitalWrite(LASER_PIN, LOW);
-    }
 }
