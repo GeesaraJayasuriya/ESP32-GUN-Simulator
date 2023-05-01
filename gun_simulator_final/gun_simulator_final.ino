@@ -87,11 +87,9 @@ void setup() {
     float gyro_z = root["gyro_z"];
     int   counter =root["counter"];
     bool  load_unload = root["load_unload"];
-    
     // Send response
     String response = "{\"forceSensor1\":" + String(forceSensor1Value) + ",\"forceSensor2\":" + String(forceSensor2Value) + ",\"forceSensor3\":" + String(forceSensor3Value) + ",\"forceSensor4\":" + String(forceSensor4Value)+ ",\"gyro_x\":" + String(gyro_x) + ",\"gyro_y\":" + String(gyro_y) + ",\"gyro_z\":" + String(gyro_z)+",\"counter\":" + String(counter)+",\"load_unload\":" + String(load_unload) + ",\"potentiometer\":" + String(potentiometerValue) + "}";
     request->send(200, "application/json", response);
-
     file.close();
   });
 
@@ -101,10 +99,8 @@ void setup() {
 void loop() {
   static unsigned long previousMillis = 0;
   const unsigned long interval = 100;
-  
   if (millis() - previousMillis >= interval) {
     previousMillis = millis();
-    
     // Read sensor values
     int reedSwitchState1 = digitalRead(reedSwitchPin1);
     int reedSwitchState2 = digitalRead(reedSwitchPin2);
@@ -130,12 +126,10 @@ void loop() {
       counter = 0;
       isSwitchClosed = false;
     }
-    
     // Process potentiometer value
     if (potentiometerValue >= 2.0) {
       processPotValue(potentiometerValue);
     }
-    
     // Write data to file
     File file = SPIFFS.open("/data/data.json", FILE_WRITE);
     if (!file) {
