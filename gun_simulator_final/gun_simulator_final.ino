@@ -39,11 +39,11 @@ void setup() {
   mpu.setGyroRange(MPU6050_RANGE_500_DEG);
 
   pinMode(SOLENOID_PIN, OUTPUT);
-  pinMode(LASER_PIN, OUTPUT); 
+  pinMode(LASER_PIN, OUTPUT);
   pinMode(reedSwitchPin1, INPUT_PULLUP);
   pinMode(reedSwitchPin2, INPUT_PULLUP);
-   pinMode(buttonPin, INPUT_PULLUP);
-  
+  pinMode(buttonPin, INPUT_PULLUP);
+
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -60,7 +60,7 @@ void setup() {
   // Set up web server
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
-  server.on("/data", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/data", HTTP_GET, [](AsyncWebServerRequest * request) {
     // Read data from file
     File file = SPIFFS.open("/data/data.json", FILE_READ);
     if (!file) {
@@ -86,10 +86,10 @@ void setup() {
     float gyro_x = root["gyro_x"];
     float gyro_y = root["gyro_y"];
     float gyro_z = root["gyro_z"];
-    int   counter =root["counter"];
+    int   counter = root["counter"];
     bool  load_unload = root["load_unload"];
     // Send response
-    String response = "{\"forceSensor1\":" + String(forceSensor1Value) + ",\"forceSensor2\":" + String(forceSensor2Value) + ",\"forceSensor3\":" + String(forceSensor3Value) + ",\"forceSensor4\":" + String(forceSensor4Value)+ ",\"gyro_x\":" + String(gyro_x) + ",\"gyro_y\":" + String(gyro_y) + ",\"gyro_z\":" + String(gyro_z)+",\"counter\":" + String(counter)+",\"load_unload\":" + String(load_unload) + ",\"buttonPressed\":" + String(buttonPressed) + "}";
+    String response = "{\"forceSensor1\":" + String(forceSensor1Value) + ",\"forceSensor2\":" + String(forceSensor2Value) + ",\"forceSensor3\":" + String(forceSensor3Value) + ",\"forceSensor4\":" + String(forceSensor4Value) + ",\"gyro_x\":" + String(gyro_x) + ",\"gyro_y\":" + String(gyro_y) + ",\"gyro_z\":" + String(gyro_z) + ",\"counter\":" + String(counter) + ",\"load_unload\":" + String(load_unload) + ",\"buttonPressed\":" + String(buttonPressed) + "}";
     request->send(200, "application/json", response);
     file.close();
   });
@@ -105,42 +105,44 @@ void loop() {
     // Read sensor values
     int reedSwitchState1 = digitalRead(reedSwitchPin1);
     int reedSwitchState2 = digitalRead(reedSwitchPin2);
-    int buttonState      =digitalRead(buttonPin);
+    int buttonState      = digitalRead(buttonPin);
     float forceSensorValues[4];
-    for (int i = 0; i < 4; i++) {
-      forceSensorValues[i] = analogRead(32+i) * (3.3 / 4095.0);
-    }
     sensors_event_t accel, gyro, temp;
-    mpu.getEvent(&accel, &gyro, &temp);
-  
     // Update switch counter
     static bool isSwitchClosed = false;
     static int counter = 0;
+    // Check button press
+    static bool isButtonPressed = false;
     if (reedSwitchState1 == LOW) {
-      if (reedSwitchState2 == HIGH && !isSwitchClosed) {
-        counter++;
-        isSwitchClosed = true;
-      } else if (reedSwitchState2 == LOW && isSwitchClosed) {
-        isSwitchClosed = false;
+      if (digitalRead(buttonPin) == HIGH && !isButtonPressed) {
+        pinMode(SOLENOID_PIN, HIGH);
+        delay(1000);
+        pinMode(SOLENOID_PIN, LOW);
+        digitalWrite(LASER_PIN, HIGH);    // Output a HIGH value to the laser pin
+        delay(2000);                      // Wait for 1 second
+        digitalWrite(LASER_PIN, LOW);
+        isButtonPressed = true;
+        if (reedSwitchState2 == HIGH && !isSwitchClosed) {
+          counter++;
+          isSwitchClosed = true;
+        } else if (reedSwitchState2 == LOW && isSwitchClosed) {
+          isSwitchClosed = false;
+        }
+        for (int i = 0; i < 4; i++) {
+          forceSensorValues[i] = analogRead(32 + i) * (3.3 / 4095.0);
+        }
+        mpu.getEvent(&accel, &gyro, &temp);
+        
+      } else if (digitalRead(buttonPin) == LOW && isButtonPressed) {
+        isButtonPressed = false;
       }
     } else {
       counter = 0;
       isSwitchClosed = false;
     }
-    // Check button press
-    static bool isButtonPressed = false;
-    if (digitalRead(buttonPin) == HIGH && !isButtonPressed) {
-       pinMode(SOLENOID_PIN,HIGH);
-        delay(1000);
-       pinMode(SOLENOID_PIN,LOW);
-       digitalWrite(LASER_PIN, HIGH);    // Output a HIGH value to the laser pin
-        delay(2000);                      // Wait for 1 second
-       digitalWrite(LASER_PIN, LOW);
-      isButtonPressed = true;
-    } else if (digitalRead(buttonPin) == LOW && isButtonPressed) {
-      isButtonPressed = false;
-    }
-    
+
+
+
     // Write data to file
     File file = SPIFFS.open("/data/data.json", FILE_WRITE);
     if (!file) {
