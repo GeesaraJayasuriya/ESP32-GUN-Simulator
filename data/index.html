@@ -269,13 +269,8 @@
 
         if (data.hasOwnProperty('buttonPressed')) {
           var buttonPressed = data.buttonPressed;
-          if(buttonPressed == 1){
-            chartData_Potentio_Meter.datasets[0].data.push(3);
-          }else{
-            chartData_Potentio_Meter.datasets[0].data.push(0);
-          }
+          chartData_Potentio_Meter.datasets[0].data.push(buttonPressed);
           chartData_Potentio_Meter.labels.push(timestamp);
-          
           lineChart_p.update();
         } else {
           console.log("Invalid data format");

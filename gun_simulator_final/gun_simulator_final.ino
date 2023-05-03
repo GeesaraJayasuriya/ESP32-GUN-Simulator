@@ -113,7 +113,7 @@ void loop() {
     static int counter = 0;
     // Check button press
     static bool isButtonPressed = false;
-    if (reedSwitchState1 == LOW) {
+   
       if (digitalRead(buttonPin) == HIGH && !isButtonPressed) {
         pinMode(SOLENOID_PIN, HIGH);
         delay(1000);
@@ -121,7 +121,6 @@ void loop() {
         digitalWrite(LASER_PIN, HIGH);    // Output a HIGH value to the laser pin
         delay(2000);                      // Wait for 1 second
         digitalWrite(LASER_PIN, LOW);
-        isButtonPressed = true;
         if (reedSwitchState2 == HIGH && !isSwitchClosed) {
           counter++;
           isSwitchClosed = true;
@@ -135,13 +134,11 @@ void loop() {
           forceSensorValues[i] = analogRead(32 + i) * (3.3 / 4095.0);
         }
         mpu.getEvent(&accel, &gyro, &temp);
+        isButtonPressed = true;
       } else if (digitalRead(buttonPin) == LOW && isButtonPressed) {
         isButtonPressed = false;
       }
-    } else {
-      counter = 0;
-      isSwitchClosed = false;
-    }
+
 
 
 
