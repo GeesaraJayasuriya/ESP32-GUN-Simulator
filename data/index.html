@@ -34,7 +34,7 @@
     <div class="container m-3">
       <div class="card text-center">
         <div class="card-header">
-          <h4>Potentiometer Meter Chart</h4>
+          <h4>TRIGGER Chart</h4>
         </div>
         <div class="card-body">
           <canvas id="chart_potentiometer"></canvas>
@@ -267,14 +267,9 @@
         gyroscope_sensors.data.datasets[2].data.push(data.gyro_z);
         gyroscope_sensors.update();
 
-        if (data.hasOwnProperty('buttonPressed')) {
-          var buttonPressed = data.buttonPressed;
-          chartData_Potentio_Meter.datasets[0].data.push(buttonPressed);
-          chartData_Potentio_Meter.labels.push(timestamp);
-          lineChart_p.update();
-        } else {
-          console.log("Invalid data format");
-        }
+        chartData_Potentio_Meter.datasets[0].data.push(data.buttonPressed);
+        chartData_Potentio_Meter.labels.push(timestamp);
+        lineChart_p.update();
 
         var counterValue;
         if (data.hasOwnProperty('counter')) {

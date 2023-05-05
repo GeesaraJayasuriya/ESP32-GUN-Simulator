@@ -154,7 +154,7 @@ void loop() {
     doc["forceSensor2"] = forceSensorValues[1];
     doc["forceSensor3"] = forceSensorValues[2];
     doc["forceSensor4"] = forceSensorValues[3];
-    doc["buttonPressed"] = buttonState;
+    doc["buttonPressed"] = isButtonPressed;
     doc["gyro_x"] = accel.acceleration.x;
     doc["gyro_y"] = accel.acceleration.y;
     doc["gyro_z"] = accel.acceleration.z;
